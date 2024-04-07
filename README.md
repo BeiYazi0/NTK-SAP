@@ -118,7 +118,7 @@ NTK 的最大特征值为 λ_max，则最大学习率不能超过 2/λ_max，网
 
 参考[大学习率区域的弹弓效应](https://zhuanlan.zhihu.com/p/139678570)。
 
-NTK 的条件数即 λ_max/λ_min，最小特征值的收敛速率与它相关。
+NTK 的条件数即 k = λ_max/λ_min，最小特征值以比率 1/k 成指数收敛，如果 k 发散，那么网络不可训练。
 
 ### 4.2 使用整个 NTK 谱是一种更好的估计
 
@@ -504,7 +504,7 @@ $$
 
 即在无限宽网络中，训练可以理解成一个简单的 kernel gradient descent 的算法，而且kernel是固定的。
 
-当 K 正定时，$ K\frac{{\partial L}}{{\partial u}}\$ 始终朝着下降的方向，若其最小特征值不为0，则神经网络的收敛速率和梯度下降一样。
+当 K 正定时，$ K\frac{{\partial L}}{{\partial u}} $ 始终朝着下降的方向，若其最小特征值不为0，则神经网络的收敛速率和梯度下降一样。
 
 对于 L2 损失，有
 
@@ -555,13 +555,27 @@ Kaiming Normal Initialization 目的在于保持每一层的输出（激活前�
 
 ### 2.more
 
-#### prune
+#### [NEURAL ARCHITECTURE SEARCH ON IMAGENET IN FOUR GPU HOURS:A THEORETICALLY INSPIRED PERSPECTIVE](https://openreview.net/pdf?id=Cnon5ezMHtu)
 
-[NEURAL ARCHITECTURE SEARCH ON IMAGENET IN FOUR GPU HOURS:A THEORETICALLY INSPIRED PERSPECTIVE](https://openreview.net/pdf?id=Cnon5ezMHtu)
+提出一种称为无训练神经网络架构搜索（TE-NAS）的新颖框架。TE-NAS 通过分析神经切核（NTK）的谱和输入空间中线性区域的数量来对体系结构进行排名。
 
-[Over-parameterised Shallow Neural Networks with Asymmetrical Node Scaling:Global Convergence Guarantees and Feature Learning](https://openreview.net/pdf?id=QBOV4DqFh6)
+这两个指标可以在无需训练和标签的情况下进行测量，从而显著减少了搜索成本：
+（1）这两个测量结果暗示了神经网络的可训练性（网络通过梯度下降优化能有多高效）和表达能力（网络能代表多复杂的功能）。
+将梯度下降的过程用无限或有限宽度的网络的神经正切核(NTK)表示，这样就能够在网络初始化的时候衡量网络的可训练性；
+通过计算神经网络可以在其输入空间划分的唯一线性空间的个数来衡量网络的表达性。
+（2）它们与网络的测试准确性密切相关。
 
-[On the Neural Tangent Kernel Analysis of Randomly Pruned Neural Networks](https://arxiv.org/pdf/2203.14328.pdf)
+最小化 NTK 的条件数 k 可以找到性能好的网络，而最大化线性区域数量 R 更容易找到高性能的网络。
+
+由于 k 和 R 的值有很大不同，不太能将它们关联起来，所以使用相对值来关联。
+具体而言就是每次将采样的一对网络进行比较，通过 k 和 R 的相对排序作为选择标准，并且它们是等权重的，这样能够平等地表示网络的可训练性和表达性。
+
+在 NAS-Bench-201 和 DARTS 搜索空间中，TE-NAS 可以完成高质量的搜索。
+在ImageNet上使用一个1080Ti搜索只需花费4个GPU小时，搜索速度上提升很大。
+
+#### [Over-parameterised Shallow Neural Networks with Asymmetrical Node Scaling:Global Convergence Guarantees and Feature Learning](https://openreview.net/pdf?id=QBOV4DqFh6)
+
+#### [On the Neural Tangent Kernel Analysis of Randomly Pruned Neural Networks](https://arxiv.org/pdf/2203.14328.pdf)
 
 #### other
 
