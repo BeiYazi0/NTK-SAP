@@ -27,7 +27,7 @@ def evaluate_accuracy(net, data_iter, rnn=False):
 def cal_sparsity(net):
     cnt, numel = 0, 0
     for module in net.modules():
-        if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
+        if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d):
             cnt += torch.sum(module.weight == 0)
             numel += module.weight.numel()
 

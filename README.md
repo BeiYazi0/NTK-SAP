@@ -199,11 +199,19 @@ class Pruner:
         self.perturb_parameters = {}
 
     def init_parameters(self):
-        for _, weight in self.parameters.items():
-            nn.init.kaiming_normal_(weight)
+        for name, weight in self.parameters.items():
+            if weight.ndim == 1:
+                weight.data.fill_(1.)
+            else:
+                nn.init.kaiming_normal_(weight)
+            weight.detach_().mul_(self.masks[name])
 
         for name, weight in self.perturb_parameters.items():
-            weight.data = self.parameters[name].data + torch.randn(*weight.shape, device=weight.device) * self.epsilon
+            if weight.ndim == 1:
+                weight.data.fill_(1.)
+            else:
+                weight.data = self.parameters[name].data + torch.randn(*weight.shape, device=weight.device) * self.epsilon
+            weight.detach_().mul_(self.masks[name])
 
     def compute_score(self, T, R, data_iter, net1, net2, device):
 
@@ -219,19 +227,15 @@ class Pruner:
 
         net1 = copy.deepcopy(net)
         for name, module in net1.named_modules():
-            if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
+            if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d):
                 module.weight.requires_grad = False
                 self.masks[name] = torch.ones_like(module.weight, requires_grad=True, device=device)
-                module.mask = self.masks[name]
-                module.forward = types.MethodType(mask_forward_conv2d
-                                                  if isinstance(module, nn.Conv2d) else mask_forward_linear, module)
                 self.parameters[name] = module.weight
                 self.weight_num += module.weight.numel()
 
         net2 = copy.deepcopy(net1)
         for name, module in net2.named_modules():
-            if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
-                module.mask = self.masks[name]
+            if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d):
                 self.perturb_parameters[name] = module.weight
 
         data_iter = load_prune_data(size, batch_size, device)
