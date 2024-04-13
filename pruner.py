@@ -118,7 +118,7 @@ class Pruner:
             dense_eigenvalues = self.compute_NTK(net, size, device)
 
         for name, module in net.named_modules():
-            if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
+            if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d) or isinstance(module, nn.BatchNorm2d):
                 self.apply_mask(module, self.masks[name])
             if isinstance(module, nn.BatchNorm2d):  # Reset momentum of BatchNorm2d
                 module.momentum = 0.1
